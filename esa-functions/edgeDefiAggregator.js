@@ -70,19 +70,11 @@ async function rpcViaEdgeRouter(request, env, jsonRpcPayload) {
   return json;
 }
 
-async function ethBlockNumber(request, env) {
-  const json = await rpcViaEdgeRouter(request, env, { jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] });
-  return Number(hexToBigInt(json.result));
-}
-
-async function ethCall(request, env, to, data) {
-  const json = await rpcViaEdgeRouter(request, env, {
-    jsonrpc: "2.0",
-    id: 1,
-    method: "eth_call",
-    params: [{ to, data }, "latest"],
-  });
-  return json.result;
+function getBatchResult(map, id) {
+  const item = map.get(id);
+  if (!item || typeof item !== "object") throw new Error(`Missing batch result id=${id}`);
+  if ("error" in item) throw new Error(`Batch JSON-RPC error id=${id}`);
+  return item.result;
 }
 
 function buildEmpty() {
@@ -136,17 +128,38 @@ export async function edgeDefiAggregator(request, env) {
     const compoundCUSDC = env?.COMPOUND_CUSDC_ADDRESS || DEFAULTS.compoundCUSDC;
     const aaveAUSDC = env?.AAVE_AUSDC_ADDRESS || DEFAULTS.aaveAUSDC;
 
+    // IMPORTANT: minimize edge subrequests by batching JSON-RPC into ONE call to edgeRpcRouter.
+    // This keeps the overall execution within typical edge limits.
+    const batch = [
+      { jsonrpc: "2.0", id: 1, method: "eth_blockNumber", params: [] },
+      { jsonrpc: "2.0", id: 2, method: "eth_call", params: [{ to: uniswapV3Pool, data: SELECTORS.liquidity }, "latest"] },
+      { jsonrpc: "2.0", id: 3, method: "eth_call", params: [{ to: aaveAUSDC, data: SELECTORS.totalSupply }, "latest"] },
+      { jsonrpc: "2.0", id: 4, method: "eth_call", params: [{ to: compoundCUSDC, data: SELECTORS.totalSupply }, "latest"] },
+      { jsonrpc: "2.0", id: 5, method: "eth_call", params: [{ to: compoundCUSDC, data: SELECTORS.exchangeRateStored }, "latest"] },
+    ];
+
+    let results;
     try {
-      next.blockNumber = await ethBlockNumber(request, env);
+      results = await rpcViaEdgeRouter(request, env, batch);
+      if (!Array.isArray(results)) throw new Error("Batch response is not an array");
     } catch (err) {
-      console.log("[edgeDefiAggregator] blockNumber failed", String(err));
+      console.log("[edgeDefiAggregator] batch via edgeRpcRouter failed", String(err));
       setCache({ value: next, updatedAtMs: now });
       return new Response(JSON.stringify(next), { status: 200, headers: { ...headers, "cache-control": "no-store" } });
     }
 
+    const map = new Map(results.map((r) => [r?.id, r]));
+
+    // Block number
+    try {
+      next.blockNumber = Number(hexToBigInt(getBatchResult(map, 1)));
+    } catch (err) {
+      console.log("[edgeDefiAggregator] blockNumber failed", String(err));
+    }
+
     // Uniswap V3 liquidity() proxy signal.
     try {
-      const liqHex = await ethCall(request, env, uniswapV3Pool, SELECTORS.liquidity);
+      const liqHex = getBatchResult(map, 2);
       const liq = hexToBigInt(liqHex);
       const tvl = bigIntToNumberSafe(liq, 10n ** 12n);
       const prevTvl = prev.protocols.uniswap_v3.tvlUsdApprox;
@@ -163,8 +176,7 @@ export async function edgeDefiAggregator(request, env) {
 
     // Aave aUSDC totalSupply() proxy.
     try {
-      if (aaveAUSDC === "0x0000000000000000000000000000000000000000") throw new Error("missing aUSDC address");
-      const supplyHex = await ethCall(request, env, aaveAUSDC, SELECTORS.totalSupply);
+      const supplyHex = getBatchResult(map, 3);
       const supply = hexToBigInt(supplyHex);
       const tvl = bigIntToNumberSafe(supply, 10n ** 6n);
       const prevTvl = prev.protocols.aave.tvlUsdApprox;
@@ -176,13 +188,13 @@ export async function edgeDefiAggregator(request, env) {
       };
     } catch (err) {
       console.log("[edgeDefiAggregator] aave failed", String(err));
-      next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "Aave signal failed (configure aUSDC address)" };
+      next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "Aave signal failed (check aUSDC address)" };
     }
 
     // Compound cUSDC totalSupply()*exchangeRateStored() proxy.
     try {
-      const totalSupplyHex = await ethCall(request, env, compoundCUSDC, SELECTORS.totalSupply);
-      const exchangeRateHex = await ethCall(request, env, compoundCUSDC, SELECTORS.exchangeRateStored);
+      const totalSupplyHex = getBatchResult(map, 4);
+      const exchangeRateHex = getBatchResult(map, 5);
       const totalSupply = hexToBigInt(totalSupplyHex);
       const exchangeRate = hexToBigInt(exchangeRateHex);
       const underlying = (totalSupply * exchangeRate) / 10n ** 18n;
