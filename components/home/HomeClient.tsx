@@ -18,9 +18,9 @@ function buildEmpty(): ProtocolsData {
     source: "local",
     chainId: 1,
     protocols: {
-      uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "Loading..." },
-      aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "Loading..." },
-      compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "Loading..." },
+      uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "加载中..." },
+      aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "加载中..." },
+      compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "加载中..." },
     },
   };
 }
@@ -53,7 +53,7 @@ export const HomeClient = memo(function HomeClient() {
         if (!cancelled) setErr(null);
       } catch (e) {
         console.log("HomeClient fetchDefiData failed", e);
-        if (!cancelled) setErr("DeFi data unavailable (check RPC/CORS or configure NEXT_PUBLIC_EDGE_DEFI_AGGREGATOR_URL).");
+        if (!cancelled) setErr("DeFi 数据暂不可用（检查 RPC/CORS，或在 ESA Pages 配置 NEXT_PUBLIC_EDGE_DEFI_AGGREGATOR_URL）。");
       } finally {
         timer = window.setTimeout(() => void tick(false), 30_000);
       }
@@ -71,9 +71,9 @@ export const HomeClient = memo(function HomeClient() {
       <section id="galaxy" className="space-y-4 scroll-mt-24">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <div className="text-sm font-medium">3D DeFi Galaxy</div>
+            <div className="text-sm font-medium">3D DeFi 星系</div>
             <div className="text-xs text-muted-foreground">
-              Updated {new Date(data.updatedAt).toLocaleTimeString()} • Block {data.blockNumber ?? "—"}
+              更新时间 {new Date(data.updatedAt).toLocaleTimeString("zh-CN")} | 区块 {data.blockNumber ?? "暂无"}
             </div>
           </div>
           <Badge variant="outline">R3F + Drei</Badge>
@@ -90,20 +90,20 @@ export const HomeClient = memo(function HomeClient() {
       <section id="ai" className="space-y-4 scroll-mt-24">
         <Card className="p-4">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium">AI Agent Layer — Chain Insight</div>
-            <Badge variant="outline">Streaming UI</Badge>
+            <div className="text-sm font-medium">AI 代理层：链上洞察</div>
+            <Badge variant="outline">流式 UI</Badge>
           </div>
           <Separator className="my-3" />
           <div className="text-sm text-muted-foreground">
-            Uses Vercel AI SDK <code>useChat</code>. Configure <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code> to point to your ESA
-            edge AI function for the full on-edge demo.
+            使用 Vercel AI SDK 的 <code>useChat</code>。如需开启 ESA 边缘 AI 演示，请将 <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code>{" "}
+            配置为你的 ESA 边缘函数地址。
           </div>
         </Card>
         {aiUrl ? <ChatWithChain api={aiUrl} /> : null}
         {!aiUrl ? (
           <Card className="p-4 text-sm text-muted-foreground">
-            AI is running in fallback-disabled mode for static export. Set <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code> in ESA Pages
-            build env to enable the agent.
+            当前为静态导出模式，AI 功能默认关闭。请在 ESA Pages 构建环境变量中设置 <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code>{" "}
+            来启用 AI 洞察助手。
           </Card>
         ) : null}
       </section>

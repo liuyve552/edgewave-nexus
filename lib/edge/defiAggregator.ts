@@ -60,9 +60,9 @@ function buildEmpty(chainId: number): ProtocolsData {
     source: "local",
     chainId,
     protocols: {
-      uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "No data yet" },
-      aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "No data yet" },
-      compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "No data yet" },
+      uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "暂无数据" },
+      aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "暂无数据" },
+      compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "暂无数据" },
     },
   };
 }
@@ -89,9 +89,9 @@ export async function getDefiStorm(rpcUrls: string[], opts?: { force?: boolean; 
     next.blockNumber = await ethBlockNumber(rpcUrls, opts?.signal);
   } catch (err) {
     console.log("getDefiStorm blockNumber failed", err);
-    next.protocols.uniswap_v3 = { ...next.protocols.uniswap_v3, health: "degraded", notes: `blockNumber failed` };
-    next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: `blockNumber failed` };
-    next.protocols.compound = { ...next.protocols.compound, health: "degraded", notes: `blockNumber failed` };
+    next.protocols.uniswap_v3 = { ...next.protocols.uniswap_v3, health: "degraded", notes: "区块高度获取失败" };
+    next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "区块高度获取失败" };
+    next.protocols.compound = { ...next.protocols.compound, health: "degraded", notes: "区块高度获取失败" };
     setCache({ value: next, updatedAtMs: now });
     return next;
   }
@@ -111,10 +111,10 @@ export async function getDefiStorm(rpcUrls: string[], opts?: { force?: boolean; 
       tvlUsdApprox: tvl,
       volumeUsdApprox24h: Math.abs(tvl - prevTvl) * 0.25,
       health: "ok",
-      notes: "tvlUsdApprox derived from pool liquidity() (proxy signal)",
+      notes: "tvlUsdApprox 由 pool.liquidity() 推导（代理信号）",
     };
   } catch {
-    next.protocols.uniswap_v3 = { ...next.protocols.uniswap_v3, health: "degraded", notes: "Uniswap V3 signal failed" };
+    next.protocols.uniswap_v3 = { ...next.protocols.uniswap_v3, health: "degraded", notes: "Uniswap V3 信号获取失败" };
   }
 
   // Aave: aUSDC totalSupply() as a proxy for deposits / TVL.
@@ -132,10 +132,10 @@ export async function getDefiStorm(rpcUrls: string[], opts?: { force?: boolean; 
       tvlUsdApprox: tvl,
       volumeUsdApprox24h: Math.abs(tvl - prevTvl) * 0.2,
       health: "ok",
-      notes: "tvlUsdApprox derived from aUSDC totalSupply() (proxy signal)",
+      notes: "tvlUsdApprox 由 aUSDC.totalSupply() 推导（代理信号）",
     };
   } catch {
-    next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "Aave signal failed (configure aUSDC address)" };
+    next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "Aave 信号获取失败（检查 aUSDC 地址配置）" };
   }
 
   // Compound: cUSDC totalSupply() and exchangeRateStored() to approximate underlying.
@@ -162,10 +162,10 @@ export async function getDefiStorm(rpcUrls: string[], opts?: { force?: boolean; 
       tvlUsdApprox: tvl,
       volumeUsdApprox24h: Math.abs(tvl - prevTvl) * 0.15,
       health: "ok",
-      notes: "tvlUsdApprox derived from cUSDC totalSupply()*exchangeRateStored() (proxy signal)",
+      notes: "tvlUsdApprox 由 cUSDC.totalSupply()*exchangeRateStored() 推导（代理信号）",
     };
   } catch {
-    next.protocols.compound = { ...next.protocols.compound, health: "degraded", notes: "Compound signal failed" };
+    next.protocols.compound = { ...next.protocols.compound, health: "degraded", notes: "Compound 信号获取失败" };
   }
 
   setCache({ value: next, updatedAtMs: now });

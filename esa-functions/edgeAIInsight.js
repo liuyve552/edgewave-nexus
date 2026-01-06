@@ -36,42 +36,42 @@ function generateInsightMarkdown(question, data) {
   const leader = entries[0]?.[0] || "unknown";
 
   const lines = [];
-  lines.push(`# EdgeWave Nexus — On-chain Insight`);
+  lines.push(`# EdgeWave Nexus：链上洞察`);
   lines.push(``);
-  lines.push(`**Question**: ${String(question || "").slice(0, 2000)}`);
-  lines.push(`**UpdatedAt**: ${data?.updatedAt || new Date().toISOString()}`);
-  if (data?.blockNumber) lines.push(`**Block**: ${data.blockNumber}`);
+  lines.push(`**问题**：${String(question || "").slice(0, 2000)}`);
+  lines.push(`**更新时间**：${data?.updatedAt || new Date().toISOString()}`);
+  if (data?.blockNumber) lines.push(`**区块**：${data.blockNumber}`);
   lines.push(``);
-  lines.push(`## Snapshot`);
+  lines.push(`## 快照`);
   for (const [id, m] of entries) {
     lines.push(
-      `- **${id}** — TVL≈$${Number(m?.tvlUsdApprox || 0).toFixed(2)} | Vol(24h)≈$${Number(m?.volumeUsdApprox24h || 0).toFixed(2)} | ${m?.health || "degraded"}`,
+      `- **${id}**：TVL≈$${Number(m?.tvlUsdApprox || 0).toFixed(2)} | 成交量(24h)≈$${Number(m?.volumeUsdApprox24h || 0).toFixed(2)} | ${m?.health || "degraded"}`,
     );
   }
   lines.push(``);
-  lines.push(`## Interpretation`);
+  lines.push(`## 解读`);
   if (topic === "overview") {
-    lines.push(`- Current TVL leader: **${leader}** (proxy metric).`);
-    lines.push(`- Volume proxy is derived from consecutive 30s samples to visualize momentum.`);
+    lines.push(`- 当前 TVL 领先：**${leader}**（代理指标，仅用于趋势对比）。`);
+    lines.push(`- 成交量(24h)≈ 为演示用合成指标：基于 30 秒采样的相邻差分，主要用于展示动量。`);
   } else if (topic === "tvl") {
-    lines.push(`- TVL≈ is a proxy derived from minimal on-chain signals; compare trends, not absolute USD value.`);
+    lines.push(`- TVL≈ 为代理指标：由少量链上只读信号推导；建议对比趋势，而非绝对美元值。`);
   } else if (topic === "volume") {
-    lines.push(`- Volume(24h)≈ is synthetic from short-interval deltas to show relative activity.`);
+    lines.push(`- 成交量(24h)≈ 为合成指标：由短间隔差分计算，用于展示相对活跃度。`);
   } else {
     const m = p[topic];
-    lines.push(`- You asked about **${topic}**:`);
+    lines.push(`- 你关注的是 **${topic}**：`);
     if (m) {
       lines.push(`  - TVL≈$${Number(m.tvlUsdApprox || 0).toFixed(2)}`);
-      lines.push(`  - Vol(24h)≈$${Number(m.volumeUsdApprox24h || 0).toFixed(2)}`);
-      lines.push(`  - Health: ${m.health || "degraded"}`);
+      lines.push(`  - 成交量(24h)≈$${Number(m.volumeUsdApprox24h || 0).toFixed(2)}`);
+      lines.push(`  - 健康度：${m.health || "degraded"}`);
     } else {
-      lines.push(`  - No matching protocol found in the current dataset.`);
+      lines.push(`  - 当前数据集中未找到匹配协议。`);
     }
   }
   lines.push(``);
-  lines.push(`## Next`);
-  lines.push(`- "Which protocol is degraded and why?"`);
-  lines.push(`- "Compare Uniswap vs Compound momentum in the last minute"`);
+  lines.push(`## 建议继续提问`);
+  lines.push(`- “哪些协议处于降级状态？原因可能是什么？”`);
+  lines.push(`- “对比 Uniswap 和 Compound 最近一分钟的动量”`);
   lines.push(``);
   return lines.join("\n");
 }
@@ -112,9 +112,9 @@ async function getDefiData(env) {
       chainId: 1,
       source: "edge",
       protocols: {
-        uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "Set EDGE_DEFI_AGGREGATOR_URL" },
-        aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "Set EDGE_DEFI_AGGREGATOR_URL" },
-        compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "Set EDGE_DEFI_AGGREGATOR_URL" },
+        uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "请配置 EDGE_DEFI_AGGREGATOR_URL" },
+        aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "请配置 EDGE_DEFI_AGGREGATOR_URL" },
+        compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "请配置 EDGE_DEFI_AGGREGATOR_URL" },
       },
     };
   }
@@ -157,7 +157,7 @@ export async function edgeAIInsight(request, env) {
       }
     }
 
-    const md = generateInsightMarkdown(question || "Give me an overview", defi);
+    const md = generateInsightMarkdown(question || "给我一个总览", defi);
     return new Response(streamText(md), { status: 200, headers: { ...headers, "cache-control": "no-store" } });
   } catch (err) {
     console.log("[edgeAIInsight] fatal", String(err));

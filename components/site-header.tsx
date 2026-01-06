@@ -12,15 +12,15 @@ export function SiteHeader() {
             EdgeWave Nexus
           </Link>
           <Badge variant="secondary" className="hidden sm:inline-flex">
-            ESA Edge • Web3 • AI
+            ESA 边缘 / Web3 / AI
           </Badge>
         </div>
         <nav className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
-            <Link href="/demo">Demo</Link>
+            <Link href="/demo">对比演示</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <a href="#galaxy">Galaxy</a>
+            <a href="#galaxy">星系</a>
           </Button>
           <Button asChild variant="ghost" size="sm">
             <a href="#ai">AI</a>

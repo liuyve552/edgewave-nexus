@@ -36,6 +36,7 @@ const Planet = memo(function Planet({
   metrics,
   hovered,
   selected,
+  showTooltip,
   onHover,
   onSelect,
 }: {
@@ -43,6 +44,7 @@ const Planet = memo(function Planet({
   metrics: ProtocolsData["protocols"][ProtocolId];
   hovered: boolean;
   selected: boolean;
+  showTooltip: boolean;
   onHover: (id: ProtocolId | null) => void;
   onSelect: (id: ProtocolId) => void;
 }) {
@@ -100,12 +102,12 @@ const Planet = memo(function Planet({
         />
       </mesh>
 
-      {hovered ? (
+      {hovered && showTooltip ? (
         <Html distanceFactor={10} center>
           <div className="pointer-events-none rounded-md border bg-background/80 px-3 py-2 text-xs shadow-sm backdrop-blur">
             <div className="font-medium">{cfg.label}</div>
-            <div className="text-muted-foreground">TVL≈${metrics.tvlUsdApprox.toFixed(2)}</div>
-            <div className="text-muted-foreground">Vol(24h)≈${metrics.volumeUsdApprox24h.toFixed(2)}</div>
+            <div className="text-muted-foreground">锁仓量（TVL）≈${metrics.tvlUsdApprox.toFixed(2)}</div>
+            <div className="text-muted-foreground">成交量（24h）≈${metrics.volumeUsdApprox24h.toFixed(2)}</div>
           </div>
         </Html>
       ) : null}
@@ -169,8 +171,28 @@ const EnergyLine = memo(function EnergyLine({
 export const DefiDataGalaxy = memo(function DefiDataGalaxy({ protocolsData }: { protocolsData: ProtocolsData }) {
   const [hovered, setHovered] = useState<ProtocolId | null>(null);
   const [selected, setSelected] = useState<ProtocolId>("uniswap_v3");
+  const [isInteracting, setIsInteracting] = useState(false);
+  const hoverClearTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const onHover = useCallback((id: ProtocolId | null) => setHovered(id), []);
+  const clearHoverTimer = useCallback(() => {
+    if (hoverClearTimer.current) {
+      clearTimeout(hoverClearTimer.current);
+      hoverClearTimer.current = null;
+    }
+  }, []);
+
+  const onHover = useCallback(
+    (id: ProtocolId | null) => {
+      if (isInteracting) return;
+      clearHoverTimer();
+      if (id === null) {
+        hoverClearTimer.current = setTimeout(() => setHovered(null), 120);
+        return;
+      }
+      setHovered(id);
+    },
+    [clearHoverTimer, isInteracting],
+  );
   const onSelect = useCallback((id: ProtocolId) => setSelected(id), []);
 
   const cfgs = useMemo<PlanetConfig[]>(() => {
@@ -206,19 +228,35 @@ export const DefiDataGalaxy = memo(function DefiDataGalaxy({ protocolsData }: { 
 
   const selectedCfg = cfgs.find((c) => c.id === selected);
   const selectedMetrics = protocolsData.protocols[selected];
+  const healthLabel = selectedMetrics.health === "ok" ? "正常" : selectedMetrics.health === "degraded" ? "降级" : selectedMetrics.health;
 
   return (
     <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_360px]">
       <div className="relative h-[520px] overflow-hidden rounded-xl border bg-gradient-to-b from-background to-muted/30">
         <Canvas
           camera={{ position: [0, 0, 7], fov: 55 }}
-          onPointerMissed={() => setHovered(null)}
+          onPointerMissed={() => {
+            if (!isInteracting) setHovered(null);
+          }}
         >
           <color attach="background" args={["#05070f"]} />
           <ambientLight intensity={0.55} />
           <pointLight position={[6, 6, 6]} intensity={1.2} />
           <pointLight position={[-6, -4, 4]} intensity={0.8} color={"#60a5fa"} />
-          <OrbitControls enablePan={false} enableZoom={false} maxPolarAngle={Math.PI * 0.65} minPolarAngle={Math.PI * 0.35} />
+          <OrbitControls
+            enablePan={false}
+            enableZoom={false}
+            maxPolarAngle={Math.PI * 0.65}
+            minPolarAngle={Math.PI * 0.35}
+            onStart={() => {
+              setIsInteracting(true);
+              clearHoverTimer();
+              setHovered(null);
+            }}
+            onEnd={() => {
+              setIsInteracting(false);
+            }}
+          />
 
           <EnergyLines cfgs={cfgs} />
           {cfgs.map((cfg) => (
@@ -228,6 +266,7 @@ export const DefiDataGalaxy = memo(function DefiDataGalaxy({ protocolsData }: { 
               metrics={protocolsData.protocols[cfg.id]}
               hovered={hovered === cfg.id}
               selected={selected === cfg.id}
+              showTooltip={!isInteracting}
               onHover={onHover}
               onSelect={onSelect}
             />
@@ -241,26 +280,26 @@ export const DefiDataGalaxy = memo(function DefiDataGalaxy({ protocolsData }: { 
         </Canvas>
 
         <div className="pointer-events-none absolute left-4 top-4 flex items-center gap-2">
-          <Badge variant="secondary">3D DeFi Galaxy</Badge>
+          <Badge variant="secondary">3D DeFi 星系</Badge>
           <Badge variant={protocolsData.protocols[selected].health === "ok" ? "default" : "destructive"}>
-            {protocolsData.protocols[selected].health}
+            {healthLabel}
           </Badge>
         </div>
       </div>
 
       <Card className="p-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-medium">{selectedCfg?.label ?? "Protocol"}</div>
-          <Badge variant="secondary">Updated {new Date(protocolsData.updatedAt).toLocaleTimeString()}</Badge>
+          <div className="text-sm font-medium">{selectedCfg?.label ?? "协议"}</div>
+          <Badge variant="secondary">更新时间 {new Date(protocolsData.updatedAt).toLocaleTimeString("zh-CN")}</Badge>
         </div>
         <Separator className="my-3" />
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">TVL≈</span>
+            <span className="text-muted-foreground">锁仓量（TVL）≈</span>
             <span className="font-mono">${selectedMetrics.tvlUsdApprox.toFixed(2)}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">Volume(24h)≈</span>
+            <span className="text-muted-foreground">成交量（24h）≈</span>
             <span className="font-mono">${selectedMetrics.volumeUsdApprox24h.toFixed(2)}</span>
           </div>
           {selectedMetrics.notes ? (
@@ -269,7 +308,7 @@ export const DefiDataGalaxy = memo(function DefiDataGalaxy({ protocolsData }: { 
             </div>
           ) : null}
           <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-            Tip: Hover to reveal inline annotations, click a planet to pin details here.
+            提示：悬停查看注释，点击星球将详情固定在右侧；拖动旋转视角时会自动隐藏悬浮提示，避免闪烁。
           </div>
         </div>
       </Card>

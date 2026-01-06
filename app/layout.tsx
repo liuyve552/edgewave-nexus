@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "EdgeWave Nexus",
-  description: "ESA Edge acceleration + Web3 on-chain + AI insight agent demo",
+  description: "ESA Pages 边缘加速 + Web3 链上可视化 + AI 洞察助手 演示",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

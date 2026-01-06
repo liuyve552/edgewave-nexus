@@ -20,10 +20,10 @@ export const ChatWithChain = memo(function ChatWithChain({ api = "/api/ai" }: { 
 
   const helpPrompts = useMemo(
     () => [
-      "Give me an overview of current DeFi signals.",
-      "Which protocol leads TVL right now?",
-      "Why is Aave degraded?",
-      "Compare Uniswap vs Compound momentum.",
+      "给我当前 DeFi 信号的总览。",
+      "目前 TVL 领先的是哪个协议？",
+      "为什么 Aave 显示为降级？",
+      "对比 Uniswap 和 Compound 的动量。",
     ],
     [],
   );
@@ -54,15 +54,15 @@ export const ChatWithChain = memo(function ChatWithChain({ api = "/api/ai" }: { 
   return (
     <Card className="p-4">
       <div className="mb-3 flex items-center justify-between">
-        <div className="text-sm font-medium">Chain Insight Assistant</div>
-        <Badge variant="secondary">Vercel AI SDK UI</Badge>
+        <div className="text-sm font-medium">链上洞察助手</div>
+        <Badge variant="secondary">Vercel AI SDK（流式）</Badge>
       </div>
 
       <ScrollArea className="h-[360px] rounded-md border bg-muted/20">
         <div className="space-y-3 p-3">
           {messages.length === 0 ? (
             <div className="space-y-2 text-sm text-muted-foreground">
-              <div>Ask about DeFi data; the agent will query edge aggregation and respond with a structured report.</div>
+              <div>可以直接问 DeFi 数据；助手会基于聚合结果返回结构化报告。</div>
               <div className="flex flex-wrap gap-2">
                 {helpPrompts.map((p) => (
                   <Button
@@ -81,14 +81,16 @@ export const ChatWithChain = memo(function ChatWithChain({ api = "/api/ai" }: { 
 
           {messages.map((m) => (
             <div key={m.id} className="rounded-md border bg-background/70 p-3">
-              <div className="mb-1 text-xs text-muted-foreground">{m.role}</div>
+              <div className="mb-1 text-xs text-muted-foreground">
+                {m.role === "user" ? "我" : m.role === "assistant" ? "助手" : m.role === "system" ? "系统" : m.role}
+              </div>
               <pre className="whitespace-pre-wrap text-sm leading-6">{renderMessageText(m)}</pre>
             </div>
           ))}
 
           {error ? (
             <div className="rounded-md border bg-background p-3 text-sm text-destructive">
-              AI error: {String(error.message ?? error)}
+              AI 出错：{String(error.message ?? error)}
             </div>
           ) : null}
           <div ref={bottomRef} />
@@ -99,11 +101,11 @@ export const ChatWithChain = memo(function ChatWithChain({ api = "/api/ai" }: { 
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask about TVL, volume, protocol health..."
+          placeholder="可以问：TVL、成交量、协议健康度..."
           disabled={isLoading}
         />
         <Button type="submit" disabled={isLoading || input.trim().length === 0}>
-          {isLoading ? "Thinking..." : "Send"}
+          {isLoading ? "思考中..." : "发送"}
         </Button>
       </form>
     </Card>

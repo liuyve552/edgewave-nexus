@@ -83,9 +83,9 @@ function buildEmpty() {
     source: "edge",
     chainId: DEFAULTS.chainId,
     protocols: {
-      uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "No data yet" },
-      aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "No data yet" },
-      compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "No data yet" },
+      uniswap_v3: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "暂无数据" },
+      aave: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "暂无数据" },
+      compound: { tvlUsdApprox: 0, volumeUsdApprox24h: 0, health: "degraded", notes: "暂无数据" },
     },
   };
 }
@@ -167,11 +167,11 @@ export async function edgeDefiAggregator(request, env) {
         tvlUsdApprox: tvl,
         volumeUsdApprox24h: Math.abs(tvl - prevTvl) * 0.25,
         health: "ok",
-        notes: "tvlUsdApprox derived from pool liquidity() (proxy signal)",
+        notes: "tvlUsdApprox 由 pool.liquidity() 推导（代理信号）",
       };
     } catch (err) {
       console.log("[edgeDefiAggregator] uniswap failed", String(err));
-      next.protocols.uniswap_v3 = { ...next.protocols.uniswap_v3, health: "degraded", notes: "Uniswap V3 signal failed" };
+      next.protocols.uniswap_v3 = { ...next.protocols.uniswap_v3, health: "degraded", notes: "Uniswap V3 信号获取失败" };
     }
 
     // Aave aUSDC totalSupply() proxy.
@@ -184,11 +184,11 @@ export async function edgeDefiAggregator(request, env) {
         tvlUsdApprox: tvl,
         volumeUsdApprox24h: Math.abs(tvl - prevTvl) * 0.2,
         health: "ok",
-        notes: "tvlUsdApprox derived from aUSDC totalSupply() (proxy signal)",
+        notes: "tvlUsdApprox 由 aUSDC.totalSupply() 推导（代理信号）",
       };
     } catch (err) {
       console.log("[edgeDefiAggregator] aave failed", String(err));
-      next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "Aave signal failed (check aUSDC address)" };
+      next.protocols.aave = { ...next.protocols.aave, health: "degraded", notes: "Aave 信号获取失败（检查 aUSDC 地址）" };
     }
 
     // Compound cUSDC totalSupply()*exchangeRateStored() proxy.
@@ -204,11 +204,11 @@ export async function edgeDefiAggregator(request, env) {
         tvlUsdApprox: tvl,
         volumeUsdApprox24h: Math.abs(tvl - prevTvl) * 0.15,
         health: "ok",
-        notes: "tvlUsdApprox derived from cUSDC totalSupply()*exchangeRateStored() (proxy signal)",
+        notes: "tvlUsdApprox 由 cUSDC.totalSupply()*exchangeRateStored() 推导（代理信号）",
       };
     } catch (err) {
       console.log("[edgeDefiAggregator] compound failed", String(err));
-      next.protocols.compound = { ...next.protocols.compound, health: "degraded", notes: "Compound signal failed" };
+      next.protocols.compound = { ...next.protocols.compound, health: "degraded", notes: "Compound 信号获取失败" };
     }
 
     setCache({ value: next, updatedAtMs: now });

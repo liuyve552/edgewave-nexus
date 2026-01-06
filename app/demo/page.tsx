@@ -38,8 +38,8 @@ export default function DemoPage() {
   const baselineRef = useRef<HTMLIFrameElement | null>(null);
   const edgewaveRef = useRef<HTMLIFrameElement | null>(null);
 
-  const [slow, setSlow] = useState<PanelStats>({ label: "Baseline (Slow DApp)", status: "idle" });
-  const [fast, setFast] = useState<PanelStats>({ label: "EdgeWave (Accelerated DApp)", status: "idle" });
+  const [slow, setSlow] = useState<PanelStats>({ label: "基线（慢 DApp）", status: "idle" });
+  const [fast, setFast] = useState<PanelStats>({ label: "EdgeWave（加速 DApp）", status: "idle" });
 
   const baselineSrc = useMemo(() => {
     const qs = new URLSearchParams({
@@ -82,14 +82,14 @@ export default function DemoPage() {
       <Card className="p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-medium">Edge Sniper Mode — Side-by-side proof</div>
-            <div className="text-xs text-muted-foreground">Metrics via Performance API + iframe message bridge (client measured).</div>
+            <div className="text-sm font-medium">Edge Sniper 模式：并排对比证明</div>
+            <div className="text-xs text-muted-foreground">指标来源：Performance API + iframe 消息桥（客户端测量）。</div>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={() => postToIframes({ type: "measure", what: "receipt" })}>
-              Measure Tx Confirmation (Receipt Lookup)
+              测量交易确认（回执查询）
             </Button>
-            <Button onClick={() => postToIframes({ type: "measure", what: "block" })}>Refresh</Button>
+            <Button onClick={() => postToIframes({ type: "measure", what: "block" })}>刷新</Button>
           </div>
         </div>
 
@@ -97,28 +97,28 @@ export default function DemoPage() {
 
         <div className="grid gap-3 md:grid-cols-3">
           <div className="rounded-lg border p-3">
-            <div className="text-xs text-muted-foreground">Baseline FCP (iframe)</div>
-            <div className="text-lg font-mono">{slow.fcpMs ? `${slow.fcpMs.toFixed(0)} ms` : "—"}</div>
+            <div className="text-xs text-muted-foreground">基线 FCP（iframe）</div>
+            <div className="text-lg font-mono">{slow.fcpMs ? `${slow.fcpMs.toFixed(0)} ms` : "暂无"}</div>
             <Progress value={pct(slow.fcpMs)} className="mt-2" />
           </div>
           <div className="rounded-lg border p-3">
-            <div className="text-xs text-muted-foreground">Baseline API latency</div>
-            <div className="text-lg font-mono">{slow.apiLatencyMs ? `${slow.apiLatencyMs.toFixed(0)} ms` : "—"}</div>
+            <div className="text-xs text-muted-foreground">基线 API 延迟</div>
+            <div className="text-lg font-mono">{slow.apiLatencyMs ? `${slow.apiLatencyMs.toFixed(0)} ms` : "暂无"}</div>
             <Progress value={pct(slow.apiLatencyMs)} className="mt-2" />
           </div>
           <div className="rounded-lg border p-3">
-            <div className="text-xs text-muted-foreground">EdgeWave API latency</div>
-            <div className="text-lg font-mono">{fast.apiLatencyMs ? `${fast.apiLatencyMs.toFixed(0)} ms` : "—"}</div>
+            <div className="text-xs text-muted-foreground">EdgeWave API 延迟</div>
+            <div className="text-lg font-mono">{fast.apiLatencyMs ? `${fast.apiLatencyMs.toFixed(0)} ms` : "暂无"}</div>
             <Progress value={pct(fast.apiLatencyMs)} className="mt-2" />
           </div>
         </div>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <FrameCard title={slow.label} badge="Normal Server (simulated)" src={baselineSrc} refEl={baselineRef} stats={slow} />
+        <FrameCard title={slow.label} badge="普通服务器（模拟）" src={baselineSrc} refEl={baselineRef} stats={slow} />
         <FrameCard
           title={fast.label}
-          badge={EDGE_RPC_ROUTER_URL ? "ESA Edge RPC Router" : "Client-side RPC Race (fallback)"}
+          badge={EDGE_RPC_ROUTER_URL ? "ESA 边缘 RPC 路由" : "客户端 RPC 竞速（降级）"}
           src={edgewaveSrc}
           refEl={edgewaveRef}
           stats={fast}
@@ -127,13 +127,12 @@ export default function DemoPage() {
 
       <Card className="p-4">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-medium">How this works</div>
+          <div className="text-sm font-medium">原理说明</div>
           <Badge variant="secondary">Promise.race + Promise.any</Badge>
         </div>
         <Separator className="my-3" />
         <div className="text-sm text-muted-foreground">
-          Baseline iframe hits a single public RPC (plus intentional delay). EdgeWave iframe calls the ESA RPC router when configured,
-          otherwise it performs a client-side RPC race fallback.
+          基线 iframe 只请求一个公共 RPC（并叠加人为延迟）；EdgeWave iframe 在配置了 ESA RPC 路由时会走边缘路由，否则会自动降级为客户端 RPC 竞速。
         </div>
       </Card>
     </main>
@@ -155,13 +154,13 @@ function FrameCard({
 }) {
   const statusBadge =
     stats.status === "ok" ? (
-      <Badge>OK</Badge>
+      <Badge>完成</Badge>
     ) : stats.status === "loading" ? (
-      <Badge variant="secondary">Loading</Badge>
+      <Badge variant="secondary">测量中</Badge>
     ) : stats.status === "error" ? (
-      <Badge variant="destructive">Error</Badge>
+      <Badge variant="destructive">错误</Badge>
     ) : (
-      <Badge variant="outline">Idle</Badge>
+      <Badge variant="outline">空闲</Badge>
     );
 
   return (
@@ -178,16 +177,16 @@ function FrameCard({
 
       <div className="grid gap-2 text-sm">
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Fastest path</span>
-          <span className="truncate font-mono">{stats.fastest ?? "—"}</span>
+          <span className="text-muted-foreground">最快路径</span>
+          <span className="truncate font-mono">{stats.fastest ?? "暂无"}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Block number</span>
-          <span className="font-mono">{stats.blockNumber ?? "—"}</span>
+          <span className="text-muted-foreground">区块号</span>
+          <span className="font-mono">{stats.blockNumber ?? "暂无"}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Tx confirmation</span>
-          <span className="font-mono">{stats.receiptLookupMs ? `${stats.receiptLookupMs.toFixed(0)} ms` : "—"}</span>
+          <span className="text-muted-foreground">交易确认</span>
+          <span className="font-mono">{stats.receiptLookupMs ? `${stats.receiptLookupMs.toFixed(0)} ms` : "暂无"}</span>
         </div>
       </div>
 

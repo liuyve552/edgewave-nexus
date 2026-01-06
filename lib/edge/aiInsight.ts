@@ -19,48 +19,48 @@ export function generateInsightMarkdown(question: string, data: ProtocolsData) {
   const p = data.protocols;
 
   const lines: string[] = [];
-  lines.push(`# EdgeWave Nexus — On-chain Insight`);
+  lines.push(`# EdgeWave Nexus：链上洞察`);
   lines.push(``);
-  lines.push(`**Question**: ${question}`);
-  lines.push(`**UpdatedAt**: ${data.updatedAt}`);
-  if (data.blockNumber) lines.push(`**Block**: ${data.blockNumber}`);
+  lines.push(`**问题**：${question}`);
+  lines.push(`**更新时间**：${data.updatedAt}`);
+  if (data.blockNumber) lines.push(`**区块**：${data.blockNumber}`);
   lines.push(``);
 
   const sorted = Object.entries(p).sort((a, b) => b[1].tvlUsdApprox - a[1].tvlUsdApprox);
   const leader = sorted[0]?.[0] ?? "unknown";
 
-  lines.push(`## Snapshot`);
+  lines.push(`## 快照`);
   for (const [id, m] of sorted) {
     lines.push(
-      `- **${id}** — TVL≈$${m.tvlUsdApprox.toFixed(2)} | Vol(24h)≈$${m.volumeUsdApprox24h.toFixed(2)} | ${m.health}`,
+      `- **${id}**：TVL≈$${m.tvlUsdApprox.toFixed(2)} | 成交量(24h)≈$${m.volumeUsdApprox24h.toFixed(2)} | ${m.health}`,
     );
   }
   lines.push(``);
 
-  lines.push(`## Interpretation`);
+  lines.push(`## 解读`);
   if (topic === "overview") {
-    lines.push(`- Current TVL leader: **${leader}** (proxy metric).`);
-    lines.push(`- Volume proxy is derived from consecutive samples (30s cadence) to visualize momentum.`);
+    lines.push(`- 当前 TVL 领先：**${leader}**（代理指标，仅用于趋势对比）。`);
+    lines.push(`- 成交量(24h)≈ 为演示用合成指标：基于 30 秒采样的相邻差分，主要用于展示动量。`);
   } else if (topic === "tvl") {
-    lines.push(`- TVL≈ is a proxy derived from minimal on-chain signals; compare trends, not absolute USD value.`);
+    lines.push(`- TVL≈ 为代理指标：由少量链上只读信号推导；建议对比趋势，而非绝对美元值。`);
   } else if (topic === "volume") {
-    lines.push(`- Volume(24h)≈ is a synthetic metric computed from short-interval deltas to show relative activity.`);
+    lines.push(`- 成交量(24h)≈ 为合成指标：由短间隔差分计算，用于展示相对活跃度。`);
   } else {
-    lines.push(`- You asked about **${topic}**:`);
+    lines.push(`- 你关注的是 **${topic}**：`);
     const m = (p as Record<string, { tvlUsdApprox: number; volumeUsdApprox24h: number; health: string }>)[topic];
     if (m) {
       lines.push(`  - TVL≈$${m.tvlUsdApprox.toFixed(2)}`);
-      lines.push(`  - Vol(24h)≈$${m.volumeUsdApprox24h.toFixed(2)}`);
-      lines.push(`  - Health: ${m.health}`);
+      lines.push(`  - 成交量(24h)≈$${m.volumeUsdApprox24h.toFixed(2)}`);
+      lines.push(`  - 健康度：${m.health}`);
     } else {
-      lines.push(`  - No matching protocol found in the current dataset.`);
+      lines.push(`  - 当前数据集中未找到匹配协议。`);
     }
   }
   lines.push(``);
 
-  lines.push(`## Suggested Next Query`);
-  lines.push(`- "Compare Uniswap vs Compound momentum in the last minute"`);
-  lines.push(`- "Which protocol is degraded and why?"`);
+  lines.push(`## 建议继续提问`);
+  lines.push(`- “对比 Uniswap 和 Compound 最近一分钟的动量”`);
+  lines.push(`- “哪些协议处于降级状态？原因可能是什么？”`);
   lines.push(``);
 
   return lines.join("\n");

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Baseline DApp (Slow)</title>
+    <title>基线 DApp（慢）</title>
     <style>
       :root {
         color-scheme: dark;
@@ -55,12 +55,12 @@
       <div class="card">
         <div class="row" style="justify-content: space-between">
           <div>
-            <div style="font-weight: 600">Baseline DApp</div>
-            <div class="muted">Single RPC + intentional delay</div>
+            <div style="font-weight: 600">基线 DApp</div>
+            <div class="muted">单 RPC + 人为延迟</div>
           </div>
           <div class="row">
-            <button id="btnBlock">Measure Block</button>
-            <button id="btnReceipt">Measure Receipt</button>
+            <button id="btnBlock">测量区块</button>
+            <button id="btnReceipt">测量回执</button>
           </div>
         </div>
 
@@ -73,13 +73,13 @@
         <div style="height: 8px"></div>
         <div class="row">
           <div class="muted">FCP</div>
-          <div id="fcp" class="mono">—</div>
+          <div id="fcp" class="mono">暂无</div>
           <div class="muted">API</div>
-          <div id="api" class="mono">—</div>
-          <div class="muted">Block</div>
-          <div id="block" class="mono">—</div>
-          <div class="muted">Receipt</div>
-          <div id="receipt" class="mono">—</div>
+          <div id="api" class="mono">暂无</div>
+          <div class="muted">区块</div>
+          <div id="block" class="mono">暂无</div>
+          <div class="muted">回执</div>
+          <div id="receipt" class="mono">暂无</div>
         </div>
       </div>
     </div>
@@ -120,10 +120,10 @@
       }
 
       function render() {
-        elFcp.textContent = state.fcpMs ? `${state.fcpMs.toFixed(0)} ms` : "—";
-        elApi.textContent = state.apiLatencyMs ? `${state.apiLatencyMs.toFixed(0)} ms` : "—";
-        elBlock.textContent = state.blockNumber != null ? String(state.blockNumber) : "—";
-        elReceipt.textContent = state.receiptLookupMs ? `${state.receiptLookupMs.toFixed(0)} ms` : "—";
+        elFcp.textContent = state.fcpMs ? `${state.fcpMs.toFixed(0)} ms` : "暂无";
+        elApi.textContent = state.apiLatencyMs ? `${state.apiLatencyMs.toFixed(0)} ms` : "暂无";
+        elBlock.textContent = state.blockNumber != null ? String(state.blockNumber) : "暂无";
+        elReceipt.textContent = state.receiptLookupMs ? `${state.receiptLookupMs.toFixed(0)} ms` : "暂无";
       }
 
       try {
@@ -146,7 +146,7 @@
           body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
         });
         const json = await res.json();
-        if (!res.ok || json.error) throw new Error("RPC failed");
+        if (!res.ok || json.error) throw new Error("RPC 请求失败");
         return json.result;
       }
 

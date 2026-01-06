@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>EdgeWave DApp (Fast)</title>
+    <title>EdgeWave DApp（快）</title>
     <style>
       :root {
         color-scheme: dark;
@@ -62,32 +62,32 @@
       <div class="card">
         <div class="row" style="justify-content: space-between">
           <div>
-            <div style="font-weight: 600">EdgeWave Mini DApp</div>
-            <div class="muted">Edge RPC router (preferred) + client-side race fallback</div>
+            <div style="font-weight: 600">EdgeWave 迷你 DApp</div>
+            <div class="muted">边缘 RPC 路由（优先）+ 客户端竞速（降级）</div>
           </div>
           <div class="row">
-            <span id="mode" class="pill">—</span>
-            <button id="btnBlock">Measure Block</button>
-            <button id="btnReceipt">Measure Receipt</button>
+            <span id="mode" class="pill">暂无</span>
+            <button id="btnBlock">测量区块</button>
+            <button id="btnReceipt">测量回执</button>
           </div>
         </div>
 
         <div style="height: 10px"></div>
 
         <div class="row">
-          <div class="muted">Fastest</div>
+          <div class="muted">最快</div>
           <div id="fastest" class="mono" style="max-width: 520px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></div>
         </div>
         <div style="height: 8px"></div>
         <div class="row">
           <div class="muted">FCP</div>
-          <div id="fcp" class="mono">—</div>
+          <div id="fcp" class="mono">暂无</div>
           <div class="muted">API</div>
-          <div id="api" class="mono">—</div>
-          <div class="muted">Block</div>
-          <div id="block" class="mono">—</div>
-          <div class="muted">Receipt</div>
-          <div id="receipt" class="mono">—</div>
+          <div id="api" class="mono">暂无</div>
+          <div class="muted">区块</div>
+          <div id="block" class="mono">暂无</div>
+          <div class="muted">回执</div>
+          <div id="receipt" class="mono">暂无</div>
         </div>
       </div>
     </div>
@@ -113,7 +113,7 @@
       const elBlock = document.getElementById("block");
       const elReceipt = document.getElementById("receipt");
 
-      const MODE = edgeRpcRouterUrl ? "edge-router" : "client-race";
+      const MODE = edgeRpcRouterUrl ? "边缘路由" : "客户端竞速";
       elMode.textContent = MODE;
 
       function postMetrics() {
@@ -128,11 +128,11 @@
       }
 
       function render() {
-        elFastest.textContent = state.fastest || "—";
-        elFcp.textContent = state.fcpMs ? `${state.fcpMs.toFixed(0)} ms` : "—";
-        elApi.textContent = state.apiLatencyMs ? `${state.apiLatencyMs.toFixed(0)} ms` : "—";
-        elBlock.textContent = state.blockNumber != null ? String(state.blockNumber) : "—";
-        elReceipt.textContent = state.receiptLookupMs ? `${state.receiptLookupMs.toFixed(0)} ms` : "—";
+        elFastest.textContent = state.fastest || "暂无";
+        elFcp.textContent = state.fcpMs ? `${state.fcpMs.toFixed(0)} ms` : "暂无";
+        elApi.textContent = state.apiLatencyMs ? `${state.apiLatencyMs.toFixed(0)} ms` : "暂无";
+        elBlock.textContent = state.blockNumber != null ? String(state.blockNumber) : "暂无";
+        elReceipt.textContent = state.receiptLookupMs ? `${state.receiptLookupMs.toFixed(0)} ms` : "暂无";
       }
 
       try {
@@ -163,7 +163,7 @@
           body: JSON.stringify(payload),
         });
         const json = await res.json();
-        if (!res.ok || json.error) throw new Error("RPC failed");
+        if (!res.ok || json.error) throw new Error("RPC 请求失败");
         return { json, res };
       }
 

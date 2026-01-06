@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       return (
         this.props.fallback ?? (
           <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
-            Visualization degraded — please refresh.
+            可视化已降级，请刷新页面。
           </div>
         )
       );

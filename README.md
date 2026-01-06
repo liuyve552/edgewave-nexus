@@ -1,6 +1,6 @@
 ## EdgeWave Nexus（边缘浪潮枢纽）
 
-**作品访问 URL（部署在阿里云 ESA Pages）**：`<YOUR_ESA_PAGES_URL>`
+**作品访问 URL（部署在阿里云 ESA Pages）**：`https://edgewave-nexus.7d7df28e.er.aliyun-esa.net`
 
 **GitHub 公开仓库地址**：`https://github.com/liuyve552/edgewave-nexus`
 
