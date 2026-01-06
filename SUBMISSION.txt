@@ -2,7 +2,7 @@
 <YOUR_ESA_PAGES_URL>
 
 Github仓库地址（公开仓库）：
-<YOUR_GITHUB_REPO_URL>
+https://github.com/liuyve552/edgewave-nexus
 
 作品说明（建议按“创意卓越 / 应用价值 / 技术探索”组织）：
 EdgeWave Nexus 是一个“三重融合”的边缘演示平台，聚焦三大亮点：

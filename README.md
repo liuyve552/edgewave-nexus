@@ -2,7 +2,7 @@
 
 **作品访问 URL（部署在阿里云 ESA Pages）**：`<YOUR_ESA_PAGES_URL>`
 
-**GitHub 公开仓库地址**：`<YOUR_GITHUB_REPO_URL>`
+**GitHub 公开仓库地址**：`https://github.com/liuyve552/edgewave-nexus`
 
 ### 官方声明（必须）
 
