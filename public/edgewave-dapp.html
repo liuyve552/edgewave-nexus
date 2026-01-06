@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EdgeWave DApp (Fast)</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+        background: #05070f;
+        color: #e5e7eb;
+      }
+      .wrap {
+        padding: 16px;
+      }
+      .card {
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 14px;
+        background: rgba(2, 6, 23, 0.65);
+        padding: 14px;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .muted {
+        color: rgba(226, 232, 240, 0.7);
+        font-size: 12px;
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      }
+      .pill {
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid rgba(56, 189, 248, 0.28);
+        background: rgba(56, 189, 248, 0.08);
+        font-size: 12px;
+      }
+      button {
+        background: rgba(56, 189, 248, 0.12);
+        color: #e5e7eb;
+        border: 1px solid rgba(56, 189, 248, 0.22);
+        border-radius: 10px;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: rgba(56, 189, 248, 0.18);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="card">
+        <div class="row" style="justify-content: space-between">
+          <div>
+            <div style="font-weight: 600">EdgeWave Mini DApp</div>
+            <div class="muted">Edge RPC router (preferred) + client-side race fallback</div>
+          </div>
+          <div class="row">
+            <span id="mode" class="pill">—</span>
+            <button id="btnBlock">Measure Block</button>
+            <button id="btnReceipt">Measure Receipt</button>
+          </div>
+        </div>
+
+        <div style="height: 10px"></div>
+
+        <div class="row">
+          <div class="muted">Fastest</div>
+          <div id="fastest" class="mono" style="max-width: 520px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap"></div>
+        </div>
+        <div style="height: 8px"></div>
+        <div class="row">
+          <div class="muted">FCP</div>
+          <div id="fcp" class="mono">—</div>
+          <div class="muted">API</div>
+          <div id="api" class="mono">—</div>
+          <div class="muted">Block</div>
+          <div id="block" class="mono">—</div>
+          <div class="muted">Receipt</div>
+          <div id="receipt" class="mono">—</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const qs = new URLSearchParams(location.search);
+      const rpcUrls = (qs.get("rpcUrls") || "").split(",").map((s) => s.trim()).filter(Boolean);
+      const edgeRpcRouterUrl = (qs.get("edgeRpcRouterUrl") || "").trim();
+
+      const state = {
+        fcpMs: undefined,
+        apiLatencyMs: undefined,
+        fastest: undefined,
+        blockNumber: undefined,
+        receiptLookupMs: undefined,
+        status: "idle",
+      };
+
+      const elMode = document.getElementById("mode");
+      const elFastest = document.getElementById("fastest");
+      const elFcp = document.getElementById("fcp");
+      const elApi = document.getElementById("api");
+      const elBlock = document.getElementById("block");
+      const elReceipt = document.getElementById("receipt");
+
+      const MODE = edgeRpcRouterUrl ? "edge-router" : "client-race";
+      elMode.textContent = MODE;
+
+      function postMetrics() {
+        parent.postMessage(
+          {
+            type: "edgewave-metrics",
+            side: "edgewave",
+            payload: { ...state },
+          },
+          location.origin,
+        );
+      }
+
+      function render() {
+        elFastest.textContent = state.fastest || "—";
+        elFcp.textContent = state.fcpMs ? `${state.fcpMs.toFixed(0)} ms` : "—";
+        elApi.textContent = state.apiLatencyMs ? `${state.apiLatencyMs.toFixed(0)} ms` : "—";
+        elBlock.textContent = state.blockNumber != null ? String(state.blockNumber) : "—";
+        elReceipt.textContent = state.receiptLookupMs ? `${state.receiptLookupMs.toFixed(0)} ms` : "—";
+      }
+
+      try {
+        const obs = new PerformanceObserver((list) => {
+          for (const e of list.getEntries()) {
+            if (e.name === "first-contentful-paint") {
+              state.fcpMs = e.startTime;
+              render();
+              postMetrics();
+            }
+          }
+        });
+        obs.observe({ type: "paint", buffered: true });
+      } catch {}
+
+      function hexToNumber(hex) {
+        try {
+          return Number(BigInt(hex));
+        } catch {
+          return undefined;
+        }
+      }
+
+      async function callRpc(url, payload) {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error("RPC failed");
+        return { json, res };
+      }
+
+      async function edgeRouterRpc(method, params) {
+        const { json, res } = await callRpc(edgeRpcRouterUrl, { jsonrpc: "2.0", id: 1, method, params });
+        return {
+          result: json.result,
+          fastest: res.headers.get("x-edgewave-fastest") || edgeRpcRouterUrl,
+        };
+      }
+
+      async function clientRaceRpc(method, params) {
+        const urls = (rpcUrls.length ? rpcUrls : ["https://cloudflare-eth.com", "https://rpc.ankr.com/eth", "https://eth.llamarpc.com"]).slice(0, 3);
+        const payload = { jsonrpc: "2.0", id: 1, method, params };
+        const attempts = urls.map(async (u) => {
+          const started = performance.now();
+          const { json } = await callRpc(u, payload);
+          return { fastest: u, result: json.result, elapsedMs: performance.now() - started };
+        });
+        // Promise.race + Promise.any: same logic as edge router.
+        try {
+          const fastestSettled = await Promise.race(attempts);
+          return { result: fastestSettled.result, fastest: fastestSettled.fastest };
+        } catch {
+          const firstSuccess = await Promise.any(attempts);
+          return { result: firstSuccess.result, fastest: firstSuccess.fastest };
+        }
+      }
+
+      async function rpc(method, params) {
+        if (edgeRpcRouterUrl) return edgeRouterRpc(method, params);
+        return clientRaceRpc(method, params);
+      }
+
+      async function measureBlock() {
+        state.status = "loading";
+        state.apiLatencyMs = undefined;
+        render();
+        postMetrics();
+        const t0 = performance.now();
+        const out = await rpc("eth_blockNumber", []);
+        const t1 = performance.now();
+        state.apiLatencyMs = t1 - t0;
+        state.fastest = out.fastest;
+        state.blockNumber = hexToNumber(out.result);
+        state.status = "ok";
+        render();
+        postMetrics();
+      }
+
+      async function measureReceipt() {
+        state.status = "loading";
+        state.receiptLookupMs = undefined;
+        render();
+        postMetrics();
+        const knownMainnetTx = "0x7f3d0a6f8b3a9d66d5d64d1ef2b35b8aab2e1b9f7469b1b0b44e1afc4c4c7f0f";
+        const t0 = performance.now();
+        const out = await rpc("eth_getTransactionReceipt", [knownMainnetTx]);
+        const t1 = performance.now();
+        state.fastest = out.fastest;
+        state.receiptLookupMs = t1 - t0;
+        state.status = "ok";
+        render();
+        postMetrics();
+      }
+
+      async function safe(fn) {
+        try {
+          await fn();
+        } catch (e) {
+          console.log("edgewave-dapp error", e);
+          state.status = "error";
+          render();
+          postMetrics();
+        }
+      }
+
+      document.getElementById("btnBlock").addEventListener("click", () => void safe(measureBlock));
+      document.getElementById("btnReceipt").addEventListener("click", () => void safe(measureReceipt));
+
+      window.addEventListener("message", (evt) => {
+        if (evt.origin !== location.origin) return;
+        if (evt.data && evt.data.type === "measure") {
+          if (evt.data.what === "receipt") void safe(measureReceipt);
+          else void safe(measureBlock);
+        }
+      });
+
+      void safe(measureBlock);
+    </script>
+  </body>
+</html>
+

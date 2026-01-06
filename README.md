@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## EdgeWave Nexus（边缘浪潮枢纽）
 
-## Getting Started
+**作品访问 URL（部署在阿里云 ESA Pages）**：`<YOUR_ESA_PAGES_URL>`
 
-First, run the development server:
+**GitHub 公开仓库地址**：`<YOUR_GITHUB_REPO_URL>`
+
+### 官方声明（必须）
+
+本项目由阿里云ESA提供加速、计算和保护
+
+![阿里云ESA Pages，构建、加速并保护你的网站](public/esa-pages-banner.png)
+
+---
+
+## 项目简介
+
+EdgeWave Nexus 是一个“三重融合”的边缘演示平台，用于在评审面前用**可量化的性能对比**与**电影级可视化**展示：
+
+- **边缘计算极速**：RPC 竞速代理（Promise.race + Promise.any），返回最快成功结果，避免“快失败”陷阱
+- **Web3 链上实时**：30 秒节奏聚合 Uniswap V3 / Aave / Compound 的代表性链上信号，结构化输出并缓存
+- **AI 代理智能**：前端流式对话 UI + 边缘侧洞察生成（可在 ESA 运行；若模型不可用则自动降级为结构化分析，保证可跑）
+
+评审核心页面：
+- `/demo`：Edge Sniper 对比模式（左：基线；右：EdgeWave 加速）+ 实时仪表盘
+- `/`：3D DeFi 星系（Hover 注解 + 点击详情 + 动态能量线）+ AI Insight Chat
+
+## 评分维度对齐（官方 4.1）
+
+- **创意卓越**：3D DeFi 星系 + 流式 AI 报告 + 对比模式“秒懂”证明
+- **应用价值**：为链上数据看板/RPC 可靠性提供可复用的“边缘加速 + 可观测”方案
+- **技术探索**：基于 ESA Pages +（可选）边缘函数/缓存的边缘应用架构；边缘函数包含完整日志与安全降级
+
+## 本地运行
+
+在项目根目录执行：
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开：
+- Home：`http://localhost:3000`
+- Compare Demo：`http://localhost:3000/demo`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## ESA Pages 部署（官方要求）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1) 将本项目推送到 **GitHub 公开仓库**
+2) 在 **阿里云 ESA Pages** 控制台连接该仓库并按指引完成构建部署
+3) 部署成功后，把 **可访问 URL** 填回本 README 顶部，并同步到 `SUBMISSION.txt`
 
-## Learn More
+边缘函数（如需在 ESA 控制台创建）请看：
+- `DEPLOYMENT.md`
 
-To learn more about Next.js, take a look at the following resources:
+## 关键代码位置
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- ESA 边缘函数（可直接粘贴 ESA 控制台）：`esa-functions/`
+  - `esa-functions/edgeRpcRouter.js`
+  - `esa-functions/edgeDefiAggregator.js`
+  - `esa-functions/edgeAIInsight.js`
+- Next.js 页面：`app/page.tsx`、`app/demo/page.tsx`
+- 3D 星系：`components/defi/DefiDataGalaxy.tsx`
+- AI 对话：`components/ChatWithChain.tsx`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 合规与原创（官方“作品要求”）
 
-## Deploy on Vercel
+- 本作品为参赛者原创，遵守第三方版权、商标及隐私权要求
+- 内容健康合规，不包含违法、暴力、仇恨、误导等不当信息
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 文档
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 交付包索引：`DELIVERY.md`
+- 部署说明：`DEPLOYMENT.md`
+- 演示脚本：`PRESENTATION.md`

@@ -1,0 +1,111 @@
+"use client";
+
+import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useChat } from "@ai-sdk/react";
+import { TextStreamChatTransport, isTextUIPart, type UIMessage } from "ai";
+
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+
+export const ChatWithChain = memo(function ChatWithChain({ api = "/api/ai" }: { api?: string }) {
+  const transport = useMemo(() => new TextStreamChatTransport({ api }), [api]);
+  const { messages, sendMessage, status, error, clearError } = useChat({ transport });
+  const [input, setInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement | null>(null);
+
+  const isLoading = status === "submitted" || status === "streaming";
+
+  const helpPrompts = useMemo(
+    () => [
+      "Give me an overview of current DeFi signals.",
+      "Which protocol leads TVL right now?",
+      "Why is Aave degraded?",
+      "Compare Uniswap vs Compound momentum.",
+    ],
+    [],
+  );
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length, isLoading]);
+
+  const onSubmit = useCallback(
+    async (e?: { preventDefault?: () => void }) => {
+      e?.preventDefault?.();
+      const text = input.trim();
+      if (!text) return;
+      clearError();
+      setInput("");
+      await sendMessage({ text });
+    },
+    [input, sendMessage, clearError],
+  );
+
+  const renderMessageText = useCallback((m: UIMessage) => {
+    return m.parts
+      .filter(isTextUIPart)
+      .map((p) => p.text)
+      .join("");
+  }, []);
+
+  return (
+    <Card className="p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="text-sm font-medium">Chain Insight Assistant</div>
+        <Badge variant="secondary">Vercel AI SDK UI</Badge>
+      </div>
+
+      <ScrollArea className="h-[360px] rounded-md border bg-muted/20">
+        <div className="space-y-3 p-3">
+          {messages.length === 0 ? (
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <div>Ask about DeFi data; the agent will query edge aggregation and respond with a structured report.</div>
+              <div className="flex flex-wrap gap-2">
+                {helpPrompts.map((p) => (
+                  <Button
+                    key={p}
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => void sendMessage({ text: p })}
+                  >
+                    {p}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {messages.map((m) => (
+            <div key={m.id} className="rounded-md border bg-background/70 p-3">
+              <div className="mb-1 text-xs text-muted-foreground">{m.role}</div>
+              <pre className="whitespace-pre-wrap text-sm leading-6">{renderMessageText(m)}</pre>
+            </div>
+          ))}
+
+          {error ? (
+            <div className="rounded-md border bg-background p-3 text-sm text-destructive">
+              AI error: {String(error.message ?? error)}
+            </div>
+          ) : null}
+          <div ref={bottomRef} />
+        </div>
+      </ScrollArea>
+
+      <form className="mt-3 flex gap-2" onSubmit={onSubmit}>
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ask about TVL, volume, protocol health..."
+          disabled={isLoading}
+        />
+        <Button type="submit" disabled={isLoading || input.trim().length === 0}>
+          {isLoading ? "Thinking..." : "Send"}
+        </Button>
+      </form>
+    </Card>
+  );
+});
