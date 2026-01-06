@@ -95,17 +95,11 @@ export const HomeClient = memo(function HomeClient() {
           </div>
           <Separator className="my-3" />
           <div className="text-sm text-muted-foreground">
-            使用 Vercel AI SDK 的 <code>useChat</code>。如需开启 ESA 边缘 AI 演示，请将 <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code>{" "}
-            配置为你的 ESA 边缘函数地址。
+            为适配 ESA Pages 静态部署并确保评委侧无需配置密钥/外部服务，AI 模块默认使用浏览器端“确定性洞察生成器”输出结构化报告；如你已部署 ESA 边缘 AI
+            函数，可通过 <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code> 切换到边缘流式模式（可选能力）。
           </div>
         </Card>
-        {aiUrl ? <ChatWithChain api={aiUrl} /> : null}
-        {!aiUrl ? (
-          <Card className="p-4 text-sm text-muted-foreground">
-            当前为静态导出模式，AI 功能默认关闭。请在 ESA Pages 构建环境变量中设置 <code>NEXT_PUBLIC_EDGE_AI_INSIGHT_URL</code>{" "}
-            来启用 AI 洞察助手。
-          </Card>
-        ) : null}
+        <ChatWithChain api={aiUrl || undefined} data={data} />
       </section>
     </>
   );

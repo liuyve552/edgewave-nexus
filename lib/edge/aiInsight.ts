@@ -2,11 +2,15 @@ import type { ProtocolsData } from "@/contracts/defi";
 
 function pickTopic(question: string) {
   const q = question.toLowerCase();
+  const raw = question;
   if (q.includes("uniswap")) return "uniswap_v3";
+  if (q.includes("uni") || raw.includes("优尼") || raw.includes("云上") || raw.includes("Uniswap")) return "uniswap_v3";
   if (q.includes("aave")) return "aave";
+  if (raw.includes("Aave") || raw.includes("爱")) return "aave";
   if (q.includes("compound")) return "compound";
-  if (q.includes("tvl")) return "tvl";
-  if (q.includes("volume")) return "volume";
+  if (raw.includes("Compound") || raw.includes("康宝") || raw.includes("复合")) return "compound";
+  if (q.includes("tvl") || raw.includes("锁仓") || raw.includes("总锁仓") || raw.includes("锁定")) return "tvl";
+  if (q.includes("volume") || raw.includes("成交量") || raw.includes("交易量") || raw.includes("交易额")) return "volume";
   return "overview";
 }
 
@@ -28,11 +32,12 @@ export function generateInsightMarkdown(question: string, data: ProtocolsData) {
 
   const sorted = Object.entries(p).sort((a, b) => b[1].tvlUsdApprox - a[1].tvlUsdApprox);
   const leader = sorted[0]?.[0] ?? "unknown";
+  const healthLabel = (h: string) => (h === "ok" ? "正常" : h === "degraded" ? "降级" : h);
 
   lines.push(`## 快照`);
   for (const [id, m] of sorted) {
     lines.push(
-      `- **${id}**：TVL≈$${m.tvlUsdApprox.toFixed(2)} | 成交量(24h)≈$${m.volumeUsdApprox24h.toFixed(2)} | ${m.health}`,
+      `- **${id}**：TVL≈$${m.tvlUsdApprox.toFixed(2)} | 成交量(24h)≈$${m.volumeUsdApprox24h.toFixed(2)} | ${healthLabel(m.health)}`,
     );
   }
   lines.push(``);
