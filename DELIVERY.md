@@ -2,6 +2,7 @@
 
 ## 0) Quick Links
 
+- Integrated entry (ESA Pages + Functions): `edge/index.js` + `esa.jsonc`
 - Edge functions: `esa-functions/`
 - Next.js pages: `app/`
 - Core components: `components/`

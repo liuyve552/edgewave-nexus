@@ -28,7 +28,7 @@ EdgeWave Nexus 是一个“三重融合”的边缘演示平台，用于在评�
 
 - **创意卓越**：3D DeFi 星系 + 流式 AI 报告 + 对比模式“秒懂”证明
 - **应用价值**：为链上数据看板/RPC 可靠性提供可复用的“边缘加速 + 可观测”方案
-- **技术探索**：基于 ESA Pages +（可选）边缘函数/缓存的边缘应用架构；边缘函数包含完整日志与安全降级
+- **技术探索**：基于 ESA Pages + 边缘函数（`esa.jsonc` + `edge/index.js`）+ EdgeKV 多级缓存（内存→EdgeKV→实时）构建的同域边缘应用架构；边缘函数包含完整日志与安全降级
 
 ## 本地运行
 
@@ -49,12 +49,13 @@ npm run dev
 2) 在 **阿里云 ESA Pages** 控制台连接该仓库并按指引完成构建部署
 3) 部署成功后，把 **可访问 URL** 填回本 README 顶部，并同步到 `SUBMISSION.txt`
 
-边缘函数（如需在 ESA 控制台创建）请看：
+边缘函数与 EdgeKV（推荐一体化部署）请看：
 - `DEPLOYMENT.md`
 
 ## 关键代码位置
 
-- ESA 边缘函数（可直接粘贴 ESA 控制台）：`esa-functions/`
+- ESA Pages + Functions 入口（推荐）：`edge/index.js` + `esa.jsonc`
+- ESA 边缘函数（可直接粘贴 ESA 控制台，旧方案保留）：`esa-functions/`
   - `esa-functions/edgeRpcRouter.js`
   - `esa-functions/edgeDefiAggregator.js`
   - `esa-functions/edgeAIInsight.js`

@@ -7,12 +7,19 @@ export type ProtocolMetrics = {
   notes?: string;
 };
 
+export type CacheMeta = {
+  hit: boolean;
+  layer: "memory" | "kv" | "live";
+  ttlMs: number;
+};
+
 export type ProtocolsData = {
   updatedAt: string;
   source: "edge" | "local";
   chainId: number;
   blockNumber?: number;
   protocols: Record<ProtocolId, ProtocolMetrics>;
+  cache?: CacheMeta;
 };
 
 // Default addresses are best-effort examples for Ethereum mainnet.

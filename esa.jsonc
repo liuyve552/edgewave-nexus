@@ -1,0 +1,11 @@
+{
+  // ESA Pages + Functions config
+  // Next.js is deployed as static export (out/).
+  "name": "edgewave-nexus",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "assets": {
+    "directory": "./out"
+  },
+  "entry": "./edge/index.js"
+}

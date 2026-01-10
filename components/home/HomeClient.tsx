@@ -26,12 +26,6 @@ function buildEmpty(): ProtocolsData {
 }
 
 async function fetchDefiData(force?: boolean): Promise<ProtocolsData> {
-  const url = config.nextPublicEdgeDefiAggregatorUrl;
-  if (url) {
-    const res = await fetch(`${url}${force ? "?force=1" : ""}`, { cache: "no-store" });
-    return (await res.json()) as ProtocolsData;
-  }
-
   // Local fallback (client-side): directly call public RPCs and aggregate in browser.
   return getDefiStorm(config.publicRpcUrls, { force: !!force });
 }
@@ -40,7 +34,26 @@ export const HomeClient = memo(function HomeClient() {
   const [data, setData] = useState<ProtocolsData>(() => buildEmpty());
   const [err, setErr] = useState<string | null>(null);
 
-  const aiUrl = useMemo(() => config.nextPublicEdgeAiInsightUrl, []);
+  const [edgeDefiUrl, setEdgeDefiUrl] = useState<string>(() => config.nextPublicEdgeDefiAggregatorUrl || "");
+  const [edgeAiUrl, setEdgeAiUrl] = useState<string>(() => config.nextPublicEdgeAiInsightUrl || "");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") return;
+    if (!edgeDefiUrl) setEdgeDefiUrl(new URL("/edge/defi", window.location.origin).toString());
+    if (!edgeAiUrl) setEdgeAiUrl(new URL("/edge/ai", window.location.origin).toString());
+  }, [edgeAiUrl, edgeDefiUrl]);
+
+  const aiUrl = useMemo(() => edgeAiUrl, [edgeAiUrl]);
+
+  const cacheBadge = useMemo(() => {
+    const layer = data.cache?.layer;
+    if (layer === "kv") return "EdgeKV";
+    if (layer === "memory") return "Memory";
+    if (layer === "live") return "Live";
+    return null;
+  }, [data.cache?.layer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,12 +61,21 @@ export const HomeClient = memo(function HomeClient() {
 
     const tick = async (force?: boolean) => {
       try {
-        const next = await fetchDefiData(force);
+        let next: ProtocolsData | null = null;
+        if (edgeDefiUrl) {
+          try {
+            const res = await fetch(`${edgeDefiUrl}${force ? "?force=1" : ""}`, { cache: "no-store" });
+            if (res.ok) next = (await res.json()) as ProtocolsData;
+          } catch {
+            // ignore
+          }
+        }
+        if (!next) next = await fetchDefiData(force);
         if (!cancelled) setData(next);
         if (!cancelled) setErr(null);
       } catch (e) {
         console.log("HomeClient fetchDefiData failed", e);
-        if (!cancelled) setErr("DeFi 数据暂不可用（检查 RPC/CORS，或在 ESA Pages 配置 NEXT_PUBLIC_EDGE_DEFI_AGGREGATOR_URL）。");
+        if (!cancelled) setErr("DeFi 数据暂不可用（检查 RPC/CORS；如需边缘聚合请确认已部署 Functions 并启用 EdgeKV）。");
       } finally {
         timer = window.setTimeout(() => void tick(false), 30_000);
       }
@@ -64,7 +86,7 @@ export const HomeClient = memo(function HomeClient() {
       cancelled = true;
       if (timer) window.clearTimeout(timer);
     };
-  }, []);
+  }, [edgeDefiUrl]);
 
   return (
     <>
@@ -76,7 +98,11 @@ export const HomeClient = memo(function HomeClient() {
               更新时间 {new Date(data.updatedAt).toLocaleTimeString("zh-CN")} | 区块 {data.blockNumber ?? "暂无"}
             </div>
           </div>
-          <Badge variant="outline">R3F + Drei</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="outline">R3F + Drei</Badge>
+            <Badge variant={data.source === "edge" ? "secondary" : "outline"}>{data.source === "edge" ? "ESA Edge" : "Local"}</Badge>
+            {cacheBadge ? <Badge variant="outline">Cache: {cacheBadge}</Badge> : null}
+          </div>
         </div>
         {err ? (
           <Card className="p-4 text-sm text-muted-foreground">{err}</Card>

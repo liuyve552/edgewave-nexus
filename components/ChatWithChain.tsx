@@ -15,7 +15,31 @@ import { generateInsightMarkdown } from "@/lib/edge/aiInsight";
 type Props = { api?: string; data?: ProtocolsData };
 
 export const ChatWithChain = memo(function ChatWithChain({ api, data }: Props) {
-  if (api) return <EdgeChat api={api} />;
+  const [edgeEnabled, setEdgeEnabled] = useState(Boolean(api));
+
+  useEffect(() => {
+    if (!api) {
+      setEdgeEnabled(false);
+      return;
+    }
+
+    let cancelled = false;
+    setEdgeEnabled(true);
+    fetch(api, { method: "OPTIONS" })
+      .then((res) => {
+        if (cancelled) return;
+        if (res.status === 404) setEdgeEnabled(false);
+      })
+      .catch(() => {
+        if (!cancelled) setEdgeEnabled(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [api]);
+
+  if (api && edgeEnabled) return <EdgeChat api={api} />;
   return <LocalChat data={data} />;
 });
 

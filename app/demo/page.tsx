@@ -28,7 +28,7 @@ const DEFAULT_PUBLIC_RPCS =
   process.env.NEXT_PUBLIC_RPC_URLS ??
   "https://cloudflare-eth.com,https://rpc.ankr.com/eth,https://eth.llamarpc.com";
 
-const EDGE_RPC_ROUTER_URL = process.env.NEXT_PUBLIC_EDGE_RPC_ROUTER_URL ?? "";
+const EDGE_RPC_ROUTER_URL_ENV = process.env.NEXT_PUBLIC_EDGE_RPC_ROUTER_URL ?? "";
 
 function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
@@ -37,6 +37,7 @@ function clamp(n: number, min: number, max: number) {
 export default function DemoPage() {
   const baselineRef = useRef<HTMLIFrameElement | null>(null);
   const edgewaveRef = useRef<HTMLIFrameElement | null>(null);
+  const [edgeRpcRouterUrl, setEdgeRpcRouterUrl] = useState<string>(EDGE_RPC_ROUTER_URL_ENV);
 
   const [slow, setSlow] = useState<PanelStats>({ label: "基线（慢 DApp）", status: "idle" });
   const [fast, setFast] = useState<PanelStats>({ label: "EdgeWave（加速 DApp）", status: "idle" });
@@ -52,10 +53,10 @@ export default function DemoPage() {
   const edgewaveSrc = useMemo(() => {
     const qs = new URLSearchParams({
       rpcUrls: DEFAULT_PUBLIC_RPCS,
-      edgeRpcRouterUrl: EDGE_RPC_ROUTER_URL,
+      edgeRpcRouterUrl,
     });
     return `/edgewave-dapp.html?${qs.toString()}`;
-  }, []);
+  }, [edgeRpcRouterUrl]);
 
   const postToIframes = useCallback((message: unknown) => {
     baselineRef.current?.contentWindow?.postMessage(message, window.location.origin);
@@ -73,6 +74,14 @@ export default function DemoPage() {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
+
+  useEffect(() => {
+    if (edgeRpcRouterUrl) return;
+    if (typeof window === "undefined") return;
+    const host = window.location.hostname;
+    if (host === "localhost" || host === "127.0.0.1") return;
+    setEdgeRpcRouterUrl(new URL("/edge/rpc", window.location.origin).toString());
+  }, [edgeRpcRouterUrl]);
 
   const maxLatency = 1800;
   const pct = (ms?: number) => (ms ? Math.round((clamp(ms, 0, maxLatency) / maxLatency) * 100) : 0);
@@ -118,7 +127,7 @@ export default function DemoPage() {
         <FrameCard title={slow.label} badge="普通服务器（模拟）" src={baselineSrc} refEl={baselineRef} stats={slow} />
         <FrameCard
           title={fast.label}
-          badge={EDGE_RPC_ROUTER_URL ? "ESA 边缘 RPC 路由" : "客户端 RPC 竞速（降级）"}
+          badge={edgeRpcRouterUrl ? "ESA 边缘 RPC 路由" : "客户端 RPC 竞速（降级）"}
           src={edgewaveSrc}
           refEl={edgewaveRef}
           stats={fast}

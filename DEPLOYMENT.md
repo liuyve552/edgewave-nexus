@@ -14,7 +14,24 @@ Notes:
 - This project is configured for **static export** (`next.config.ts` uses `output: "export"`), to match ESA Pages capabilities.
 - The UI can run without ESA functions (browser uses public RPCs as fallback), but the “EdgeWave accelerated” path is best when ESA functions are configured.
 
-## 2) ESA Edge Functions (Aliyun ESA Console)
+## 2) ESA Pages + Functions（推荐：仓库一体化）
+
+本仓库已内置：
+- `esa.jsonc`：让 ESA Pages 同时部署静态资源（out/）与边缘函数入口
+- `edge/index.js`：同域边缘 API：`/edge/rpc`、`/edge/defi`、`/edge/ai`
+
+EdgeKV（补齐“边缘存储 + 缓存”）：
+- 启用 ESA **EdgeKV**，创建 namespace：`edgewave-nexus`
+- `/edge/defi` 采用 **L1 内存 → L2 EdgeKV（TTL=30s）→ L3 实时链上读取**，并返回响应头 `x-edgewave-defi-cache` 标识命中层级
+
+可选环境变量（提升稳定性/额度，不填也能跑）：
+- `INFURA_API_KEY`（optional）
+- `ALCHEMY_API_KEY`（optional）
+- `UNISWAP_V3_POOL_ADDRESS` / `AAVE_AUSDC_ADDRESS` / `COMPOUND_CUSDC_ADDRESS`（optional override）
+
+前端无需强制配置 `NEXT_PUBLIC_EDGE_*`：在 ESA 域名下会自动尝试同域 `/edge/*`；如需显式指定也可配置。
+
+## 3) （可选）手工创建 ESA Edge Functions (Aliyun ESA Console)
 
 Create 3 edge functions (copy-paste JS files) and bind them to routes (example routes below).
 
@@ -56,13 +73,13 @@ Behavior:
 - Accepts `{ messages: [...] }` (Vercel AI SDK `useChat` compatible payload).
 - Streams a plaintext answer.
 
-## 3) Deploy Frontend to ESA Pages
+## 4) Deploy Frontend to ESA Pages
 
 ESA Pages supports **static site** deployment for Next.js. Use:
 - Build command: `npm run build`
 - Static assets directory: `out`
 
-## 4) Wire Frontend → ESA Functions
+## 5) Wire Frontend → ESA Functions
 
 Set these **ESA Pages build env** variables so the static frontend can call your functions:
 
@@ -80,7 +97,7 @@ NEXT_PUBLIC_RPC_URLS=https://cloudflare-eth.com,https://rpc.ankr.com/eth,https:/
 Then:
 - Open `/demo` and confirm the “EdgeWave API latency” panel is faster and shows `x-edgewave-fastest` in the EdgeWave iframe.
 
-## 5) Security Notes
+## 6) Security Notes
 
 - Never commit real API keys.
 - ESA edge functions in this repo only reference env vars (no hardcoded secrets).

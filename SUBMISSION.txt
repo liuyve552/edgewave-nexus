@@ -29,7 +29,9 @@ GitHub 公共仓库地址：https://github.com/liuyve552/edgewave-nexus
 - ESA Pages 静态部署：采用 Next.js 静态导出（out/），保证评委侧打开即可运行、无需后端。
 - 边缘加速思路可量化：/demo 用 Performance API + iframe 消息桥记录 FCP 与 RPC/Receipt 延迟，并展示“最快成功路径”。
 - Web3 链上聚合：30 秒节奏读取 Uniswap V3 / Aave / Compound 的代表性只读信号，聚合成结构化指标并用于 3D 可视化。
-- AI 可靠演示策略：默认启用“确定性洞察生成器”（本地可复现）；如部署 ESA 边缘 AI 函数并配置 NEXT_PUBLIC_EDGE_AI_INSIGHT_URL，可切换到边缘流式模式（可选能力）。
+- ESA 边缘生态补齐：通过 `esa.jsonc` + `edge/index.js` 将边缘 API 与 Pages 同域部署（/edge/rpc、/edge/defi、/edge/ai），减少评委验收配置成本。
+- EdgeKV 多级缓存：/edge/defi 采用 L1 内存 → L2 ESA EdgeKV（TTL=30s）→ L3 实时链上读取；响应头 `x-edgewave-defi-cache` 标识命中层级。
+- AI 可靠演示策略：默认启用“确定性洞察生成器”（本地可复现）；如启用边缘 AI 端点将自动切换为边缘流式模式（可选能力）。
 
 【应用价值】
 - 可复用的“边缘加速 + 可观测”方案：适用于链上看板、RPC 可靠性优化、Web3 前端性能对比验证。
