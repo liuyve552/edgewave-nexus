@@ -20,10 +20,10 @@ export function SiteHeader() {
             <Link href="/demo">对比演示</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <a href="#galaxy">星系</a>
+            <Link href="/#galaxy">星系</Link>
           </Button>
           <Button asChild variant="ghost" size="sm">
-            <a href="#ai">AI</a>
+            <Link href="/#ai">AI</Link>
           </Button>
         </nav>
       </div>
